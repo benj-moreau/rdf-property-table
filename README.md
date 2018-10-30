@@ -1,17 +1,17 @@
 # rdf-property-table
-Transform a RDF file into a property table.
+Transform a RDF file into property tables.
 
 # Installation
 
-Assuming you already have `python 2.7`, `pip 9`, `java 8`.
+Assuming you already have `python 2.7`, `pip 9`, `java 8`,
 
-Download jena 3.9 and update classpath
+Download [jena 3.9](https://jena.apache.org/download/index.cgi) and update classpath:
 
 ```bash
 export CLASSPATH=${CLASSPATH}:YOUR-JENA-DIR-PATH/lib/*
 ```
 
-create a new virtualenv.
+Create a new virtualenv:
 
 install Cython
 
@@ -19,7 +19,7 @@ install Cython
 python -m pip install --upgrade cython
 ```
 
-install dependencies with pip.
+Install dependencies with pip:
 
 ```bash
 pip install -r requirements.txt
