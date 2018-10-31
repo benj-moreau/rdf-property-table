@@ -24,3 +24,15 @@ Install dependencies with pip:
 ```bash
 pip install -r requirements.txt
 ```
+
+# Run it !
+
+```bash
+python property_table.py [filepath]
+```
+
+example for a turtle file in the current directory:
+
+```bash
+python property_table.py rdf_file.ttl
+```
