@@ -1,29 +1,20 @@
-from jnius import autoclass
 import argparse
 
-from utils.sparql_queries import predicates_query, property_table_query
+from utils.sparql_queries import exec_predicates_query, exec_property_table, load_dataset, clean_dataset
 
 
 def get_predicates(dataset):
-    qexec = autoclass('org.apache.jena.query.QueryExecutionFactory').create(predicates_query(), dataset)
-    formatter = autoclass('org.apache.jena.query.ResultSetFormatter')
-    results = qexec.execSelect()
-    results = formatter.toList(results).listIterator()
+    results = exec_predicates_query(dataset)
     predicates = []
     while results.hasNext():
         next_result = results.next()
         predicate = next_result.get('?p').toString()
         predicates.append(predicate)
-    qexec.close()
     return predicates
 
 
-def get_property_table(dataset, properties):
-    print property_table_query(properties)
-    qexec = autoclass('org.apache.jena.query.QueryExecutionFactory').create(property_table_query(properties), dataset)
-    formatter = autoclass('org.apache.jena.query.ResultSetFormatter')
-    results = qexec.execSelect()
-    formatter.outputAsCSV(results)
+def get_property_table(properties, dataset):
+    exec_property_table(properties, dataset)
 
 
 def main():
@@ -32,10 +23,10 @@ def main():
                         help='RDF file to transform')
     args = parser.parse_args()
     filepath = args.filepath[0]
-    dataset = autoclass('org.apache.jena.riot.RDFDataMgr').loadDataset(filepath)
-    # formater.outputAsCSV(results)
+    dataset = load_dataset(filepath)
     properties = get_predicates(dataset)
-    get_property_table(dataset, properties)
+    get_property_table(properties, dataset)
+    clean_dataset()
 
 
 if __name__ == "__main__":

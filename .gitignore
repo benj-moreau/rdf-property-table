@@ -3,7 +3,6 @@
 *.n3
 *.ntriples
 *.jsonld
-*.xml
 *.rdfxml
 
 *.DS_Store
