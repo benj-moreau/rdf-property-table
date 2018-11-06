@@ -13,27 +13,35 @@ WHERE
 }
 """
 
-PREDICATES_QUERY = """
-SELECT DISTINCT ?p
+PREDICATES_QUERY = """SELECT DISTINCT ?p
+WHERE
+{{
+      ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <{}> .
+      ?s ?p ?o
+}}
+"""
+
+TYPES_QUERY = """
+SELECT DISTINCT ?type
 WHERE
 {
-      ?s ?p ?o
+      ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?type
 }
 """
 
 SPARQL_QUERY = 'SELECT {} WHERE {{ {} }}'
 
 
-def _property_table_query(properties):
+def _property_table_query(properties, typ):
     subject = '?subject'
     variables = _get_variables(properties)
-    triple_patterns = '{}'
+    triple_patterns = ['?subject <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <{}> .'.format(typ)]
     query_variables = '?subject {}'
     for prop_variable, prop in zip(variables, properties):
-        triple_pattern = '{} <{}> {} .\n'.format(subject, prop, prop_variable)
-        triple_patterns = triple_patterns.format('{} {}'.format(triple_pattern, '{}'))
+        triple_pattern = 'OPTIONAL {{ {} <{}> {} }}'.format(subject, prop, prop_variable)
+        triple_patterns.append(triple_pattern)
         query_variables = query_variables.format('{} {}'.format(prop_variable, '{}'))
-    triple_patterns = triple_patterns.replace('{}', '')
+    triple_patterns = '\n'.join(triple_patterns)
     query_variables = query_variables.replace('{}', '')
     return SPARQL_QUERY.format(query_variables, '{}'.format(triple_patterns))
 
@@ -46,10 +54,17 @@ def _get_variables(properties):
             sep = '#'
         else:
             sep = '/'
-        prop_label = prop.split(sep)[-1]
+        prop_label = prop.split(sep)[-1].replace('-', '_')
         variable = variable_pattern.format(prop_label)
         variables.append(variable)
     return variables
+
+
+def _get_type_suffix(typ):
+    if '#' in typ:
+        return typ.split('#')[-1]
+    else:
+        return typ.split('/')[-1]
 
 
 def _exec_query(query, dataset):
@@ -60,17 +75,32 @@ def _exec_query(query, dataset):
 
 
 @fn_timer
-def exec_predicates_query(dataset):
-    results = _exec_query(PREDICATES_QUERY, dataset)
+def exec_types_query(dataset):
+    results = _exec_query(TYPES_QUERY, dataset)
     formatter = autoclass('org.apache.jena.query.ResultSetFormatter')
     return formatter.toList(results).listIterator()
 
 
 @fn_timer
-def exec_property_table(properties, dataset):
-    results = _exec_query(_property_table_query(properties), dataset)
+def exec_predicates_query(dataset, typ):
+    results = _exec_query(PREDICATES_QUERY.format(typ), dataset)
     formatter = autoclass('org.apache.jena.query.ResultSetFormatter')
-    formatter.outputAsCSV(results)
+    return formatter.toList(results).listIterator()
+
+
+@fn_timer
+def exec_property_table(properties, dataset, typ):
+    results = _exec_query(_property_table_query(properties, typ), dataset)
+    formatter = autoclass('org.apache.jena.query.ResultSetFormatter')
+    File = autoclass('java.io.File')
+    FileOutputStream = autoclass('java.io.FileOutputStream')
+    f = File('results/{}.csv'.format(_get_type_suffix(typ)))
+    fop = FileOutputStream(f)
+    if not f.exists():
+        f.createNewFile()
+    formatter.outputAsCSV(fop, results)
+    fop.flush()
+    fop.close()
 
 
 @fn_timer

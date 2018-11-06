@@ -1,5 +1,7 @@
 # rdf-property-table
-Transform a RDF file into property tables.
+Transform a RDF file into property class tables.
+
+See [A survey of RDF storage approaches](https://hal.inria.fr/hal-01299496/document) for more informations on property table.
 
 # Installation
 
