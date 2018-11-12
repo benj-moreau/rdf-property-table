@@ -13,6 +13,15 @@ WHERE
 }
 """
 
+
+SUBJECT_QUERY = """SELECT ?s
+WHERE
+{{
+      ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <{}>
+}}
+LIMIT 1
+"""
+
 PREDICATES_QUERY = """SELECT DISTINCT ?p
 WHERE
 {{
@@ -32,11 +41,12 @@ WHERE
 SPARQL_QUERY = 'SELECT {} WHERE {{ {} }}'
 
 
-def _property_table_query(properties, typ):
+def _property_table_query(properties, typ, subject_prefix):
     subject = '?subject'
-    variables = _get_variables(properties)
-    triple_patterns = ['?subject <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <{}> .'.format(typ)]
-    query_variables = '?subject {}'
+    variables = get_variables(properties)
+    triple_patterns = ['{} <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <{}> .'.format(subject, typ)]
+    triple_patterns.append('bind ( STRAFTER(STR({}), "{}") as {})'.format(subject, subject_prefix, get_id_variable(typ)))
+    query_variables = get_id_variable(typ) + '{}'
     for prop_variable, prop in zip(variables, properties):
         triple_pattern = 'OPTIONAL {{ {} <{}> {} }}'.format(subject, prop, prop_variable)
         triple_patterns.append(triple_pattern)
@@ -46,7 +56,7 @@ def _property_table_query(properties, typ):
     return SPARQL_QUERY.format(query_variables, '{}'.format(triple_patterns))
 
 
-def _get_variables(properties):
+def get_variables(properties):
     variables = []
     variable_pattern = '?{}'
     for prop in properties:
@@ -54,17 +64,28 @@ def _get_variables(properties):
             sep = '#'
         else:
             sep = '/'
-        prop_label = prop.split(sep)[-1].replace('-', '_')
+        prop_label = prop.split(sep)[-1].replace('-', '_').lower()
         variable = variable_pattern.format(prop_label)
         variables.append(variable)
     return variables
 
 
-def _get_type_suffix(typ):
+def get_id_variable(typ):
+    return '?{}_id'.format(get_uri_suffix(typ).lower())
+
+
+def get_uri_suffix(typ):
     if '#' in typ:
-        return typ.split('#')[-1]
+        return typ.rsplit('#', 1)[-1]
     else:
-        return typ.split('/')[-1]
+        return typ.rsplit('/', 1)[-1]
+
+
+def get_uri_prefix(typ):
+    if '#' in typ:
+        return '{}#'.format(typ.rsplit('#', 1)[0])
+    else:
+        return '{}/'.format(typ.rsplit('/', 1)[0])
 
 
 def _exec_query(query, dataset):
@@ -72,6 +93,12 @@ def _exec_query(query, dataset):
     results = qexec.execSelect()
     # qexec.close()
     return results
+
+
+def exec_subject_query(dataset, typ):
+    results = _exec_query(SUBJECT_QUERY.format(typ), dataset)
+    formatter = autoclass('org.apache.jena.query.ResultSetFormatter')
+    return formatter.toList(results).listIterator()
 
 
 @fn_timer
@@ -89,12 +116,12 @@ def exec_predicates_query(dataset, typ):
 
 
 @fn_timer
-def exec_property_table(properties, dataset, typ):
-    results = _exec_query(_property_table_query(properties, typ), dataset)
+def exec_property_table(properties, dataset, typ, subject_prefix):
+    results = _exec_query(_property_table_query(properties, typ, subject_prefix), dataset)
     formatter = autoclass('org.apache.jena.query.ResultSetFormatter')
     File = autoclass('java.io.File')
     FileOutputStream = autoclass('java.io.FileOutputStream')
-    f = File('results/{}.csv'.format(_get_type_suffix(typ)))
+    f = File('results/{}.csv'.format(get_uri_suffix(typ)))
     fop = FileOutputStream(f)
     if not f.exists():
         f.createNewFile()
@@ -116,4 +143,4 @@ def clean_dataset():
     try:
         shutil.rmtree(STORE_PATH)
     except OSError as e:
-        print ("Error: %s - %s." % (e.filename, e.strerror))
+        print ("Info: %s - %s." % (e.filename, "Already cleaned"))
