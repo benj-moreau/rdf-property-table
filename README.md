@@ -5,7 +5,7 @@ See [A survey of RDF storage approaches](https://hal.inria.fr/hal-01299496/docum
 
 # Installation
 
-Assuming you already have `python 2.7`, `pip 9`, `java 8`,
+Assuming you already have `python 2.7`, `pip 9`, `java 11`,
 
 Download [jena 3.9](https://jena.apache.org/download/index.cgi) and update classpath:
 
