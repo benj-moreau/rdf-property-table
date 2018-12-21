@@ -6,7 +6,7 @@ import validators
 from utils.sparql_queries import exec_predicates_query, exec_types_query, exec_subject_query, exec_property_table
 from utils.sparql_queries import load_dataset, clean_dataset, get_uri_prefix
 from utils.rml_serializer import get_rml_graph
-from utils.sparql_queries import get_uri_suffix, get_uri_prefix, get_id_variable, get_variables
+from utils.sparql_queries import get_uri_suffix, get_id_variable, get_variables
 
 CSV_DELIMITER = '|'
 REPLACE_DELIMITER = ' '
