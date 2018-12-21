@@ -33,8 +33,8 @@ pip install -r requirements.txt
 python property_table.py [filepath]
 ```
 
-example for a turtle file in the current directory:
+Example to convert two RDF fils in the current directory:
 
 ```bash
-python property_table.py rdf_file.ttl
+python property_table.py rdf_file.ttl rdf_file2.ttl
 ```

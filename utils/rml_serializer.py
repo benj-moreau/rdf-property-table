@@ -7,7 +7,7 @@ rml = Namespace("http://semweb.mmlab.be/ns/rml#")
 ql = Namespace('http://semweb.mmlab.be/ns/ql#')
 
 
-def get_rml_graph(properties, typ, subject_prefix):
+def get_rml_graph(properties, typ, subject_prefix, filename, templates):
     rdf_mapping = Graph()
     rdf_mapping.bind("ql", ql)
     rdf_mapping.bind("rr", rr)
@@ -16,13 +16,13 @@ def get_rml_graph(properties, typ, subject_prefix):
     variables = get_variables(properties)
     for variable, prop in zip(variables, properties):
         field = variable.replace('?', '')
-        add_predicate_map(rdf_mapping, prop, field, typ)
-    rdf_mapping.serialize(format='ttl', destination='results/{}.rml.ttl'.format(get_uri_suffix(typ)))
+        add_predicate_map(rdf_mapping, prop, field, typ, templates)
+    rdf_mapping.serialize(format='ttl', destination='results/{}_{}.rml.ttl'.format(filename, get_uri_suffix(typ)))
 
 
 def add_class_map(rdf_mapping, typ, subject_prefix):
     subject_id = URIRef("#{}".format(get_uri_suffix(typ)))
-    subject_template = "{}{{{}}}".format(subject_prefix, get_id_variable(typ).replace('?', ''))
+    subject_template = "{}{{{}}}".format(subject_prefix, get_id_variable(typ).replace('?', '').lower())
     logical_source = rml['logicalSource']
     logical_source_node = BNode()
     rdf_mapping.add((subject_id, logical_source, logical_source_node))
@@ -37,7 +37,7 @@ def add_class_map(rdf_mapping, typ, subject_prefix):
     rdf_mapping.add((subject_map_node, rr['class'], URIRef(typ)))
 
 
-def add_predicate_map(rdf_mapping, prop, field, typ):
+def add_predicate_map(rdf_mapping, prop, field, typ, templates):
     subject_id = URIRef("#{}".format(get_uri_suffix(typ)))
     predicate_map = rr['predicateObjectMap']
     node = BNode()
@@ -46,5 +46,8 @@ def add_predicate_map(rdf_mapping, prop, field, typ):
     object_node = BNode()
     rdf_mapping.add((node, rr['objectMap'], object_node))
     # Target of the predicate is a field value (Term)
-    rdf_mapping.add((object_node, rml['reference'], Literal("$.{}".format(field))))
-    # rdf_mapping.add((object_node, rr['datatype'], xsd:field_type))
+    if templates.get(field):
+        rdf_mapping.add((object_node, rr['template'], Literal("{}{{{}}}".format(templates[field], field.lower()))))
+    else:
+        rdf_mapping.add((object_node, rml['reference'], Literal("$.{}".format(field.lower()))))
+        # rdf_mapping.add((object_node, rr['datatype'], xsd:field_type))

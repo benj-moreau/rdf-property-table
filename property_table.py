@@ -1,8 +1,15 @@
 import argparse
+import codecs
+import csv
+import validators
 
 from utils.sparql_queries import exec_predicates_query, exec_types_query, exec_subject_query, exec_property_table
 from utils.sparql_queries import load_dataset, clean_dataset, get_uri_prefix
 from utils.rml_serializer import get_rml_graph
+from utils.sparql_queries import get_uri_suffix, get_uri_prefix, get_id_variable, get_variables
+
+CSV_DELIMITER = '|'
+REPLACE_DELIMITER = ' '
 
 
 def get_types(dataset):
@@ -26,8 +33,35 @@ def get_predicates(dataset, typ):
     return predicates
 
 
-def get_property_table(properties, dataset, typ, subject_prefix):
-    exec_property_table(properties, dataset, typ, subject_prefix)
+def get_property_table(properties, dataset, typ, subject_prefix, filename):
+    results = exec_property_table(properties, dataset, typ, subject_prefix, filename)
+    filename = 'results/{}_{}.csv'.format(filename, get_uri_suffix(typ))
+    templates = {}
+    with codecs.open(filename, "w") as fp:
+        writer = csv.writer(fp, delimiter=CSV_DELIMITER)
+        id_variable = get_id_variable(typ)
+        header = [id_variable.replace('?', '')]
+        properties = get_variables(properties)
+        for prop in properties:
+            prop = prop.replace('?', '')
+            header.append(prop)
+        writer.writerow(header)
+        while results.hasNext():
+            next_result = results.next()
+            row = [next_result.get(id_variable).toString().replace(CSV_DELIMITER, REPLACE_DELIMITER)]
+            for prop in properties:
+                value = next_result.get(prop)
+                if value:
+                    value = value.toString()
+                    field = prop.replace('?', '')
+                    if validators.url(value):
+                        if not templates.get(field):
+                            templates[field] = get_uri_prefix(value)
+                        value = get_uri_suffix(value)
+                    value = value.replace(CSV_DELIMITER, REPLACE_DELIMITER)
+                row.append(value)
+            writer.writerow(row)
+    return templates
 
 
 def get_subject_prefix(dataset, typ):
@@ -38,21 +72,29 @@ def get_subject_prefix(dataset, typ):
     return None
 
 
+def get_filename(filepath):
+    # remove path
+    filename = filepath.rsplit('/', 1)[-1]
+    # remove extension
+    filename = filename.rsplit('.', 1)[0]
+    return filename
+
+
 def main():
     parser = argparse.ArgumentParser(prog='property-table', description='Transform a rdf graph into a property table')
-    parser.add_argument('filepath', metavar='FP', type=str, nargs='+',
-                        help='RDF file to transform')
+    parser.add_argument('filepath', nargs='+', help='RDF file to transform', type=str)
     args = parser.parse_args()
-    filepath = args.filepath[0]
     clean_dataset()
-    dataset = load_dataset(filepath)
-    types = get_types(dataset)
-    for typ in types:
-        subject_prefix = get_subject_prefix(dataset, typ)
-        properties = get_predicates(dataset, typ)
-        get_property_table(properties, dataset, typ, subject_prefix)
-        get_rml_graph(properties, typ, subject_prefix)
-    clean_dataset()
+    for filepath in args.filepath:
+        filename = get_filename(filepath)
+        dataset = load_dataset(filepath)
+        types = get_types(dataset)
+        for typ in types:
+            subject_prefix = get_subject_prefix(dataset, typ)
+            properties = get_predicates(dataset, typ)
+            templates = get_property_table(properties, dataset, typ, subject_prefix, filename)
+            get_rml_graph(properties, typ, subject_prefix, filename, templates)
+        clean_dataset()
 
 
 if __name__ == "__main__":

@@ -64,14 +64,14 @@ def get_variables(properties):
             sep = '#'
         else:
             sep = '/'
-        prop_label = prop.split(sep)[-1].replace('-', '_').lower()
+        prop_label = prop.split(sep)[-1].replace('-', '_')
         variable = variable_pattern.format(prop_label)
         variables.append(variable)
     return variables
 
 
 def get_id_variable(typ):
-    return '?{}_id'.format(get_uri_suffix(typ).lower())
+    return '?{}_id'.format(get_uri_suffix(typ))
 
 
 def get_uri_suffix(typ):
@@ -116,12 +116,13 @@ def exec_predicates_query(dataset, typ):
 
 
 @fn_timer
-def exec_property_table(properties, dataset, typ, subject_prefix):
+def exec_property_table(properties, dataset, typ, subject_prefix, filename):
     results = _exec_query(_property_table_query(properties, typ, subject_prefix), dataset)
     formatter = autoclass('org.apache.jena.query.ResultSetFormatter')
+    return formatter.toList(results).listIterator()
     File = autoclass('java.io.File')
     FileOutputStream = autoclass('java.io.FileOutputStream')
-    f = File('results/{}.csv'.format(get_uri_suffix(typ)))
+    f = File('results/{}_{}.csv'.format(filename, get_uri_suffix(typ)))
     fop = FileOutputStream(f)
     if not f.exists():
         f.createNewFile()
