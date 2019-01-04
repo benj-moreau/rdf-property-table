@@ -96,39 +96,22 @@ def _exec_query(query, dataset):
 
 
 def exec_subject_query(dataset, typ):
-    results = _exec_query(SUBJECT_QUERY.format(typ), dataset)
-    formatter = autoclass('org.apache.jena.query.ResultSetFormatter')
-    return formatter.toList(results).listIterator()
+    return _exec_query(SUBJECT_QUERY.format(typ), dataset)
 
 
 @fn_timer
 def exec_types_query(dataset):
-    results = _exec_query(TYPES_QUERY, dataset)
-    formatter = autoclass('org.apache.jena.query.ResultSetFormatter')
-    return formatter.toList(results).listIterator()
+    return _exec_query(TYPES_QUERY, dataset)
 
 
 @fn_timer
 def exec_predicates_query(dataset, typ):
-    results = _exec_query(PREDICATES_QUERY.format(typ), dataset)
-    formatter = autoclass('org.apache.jena.query.ResultSetFormatter')
-    return formatter.toList(results).listIterator()
+    return _exec_query(PREDICATES_QUERY.format(typ), dataset)
 
 
 @fn_timer
 def exec_property_table(properties, dataset, typ, subject_prefix, filename):
-    results = _exec_query(_property_table_query(properties, typ, subject_prefix), dataset)
-    formatter = autoclass('org.apache.jena.query.ResultSetFormatter')
-    return formatter.toList(results).listIterator()
-    File = autoclass('java.io.File')
-    FileOutputStream = autoclass('java.io.FileOutputStream')
-    f = File('results/{}_{}.csv'.format(filename, get_uri_suffix(typ)))
-    fop = FileOutputStream(f)
-    if not f.exists():
-        f.createNewFile()
-    formatter.outputAsCSV(fop, results)
-    fop.flush()
-    fop.close()
+    return _exec_query(_property_table_query(properties, typ, subject_prefix), dataset)
 
 
 @fn_timer
