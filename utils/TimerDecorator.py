@@ -12,7 +12,7 @@ def fn_timer(function):
         t0 = time.time()
         result = function(*args, **kwargs)
         t1 = time.time()
-        LOGGER.info("Total time running {}: {} seconds".format(function.func_name,
+        LOGGER.info("Total time running {}: {} seconds".format(function.__name__,
                                                                str(t1-t0)))
         return result
     return function_timer

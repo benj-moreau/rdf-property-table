@@ -5,7 +5,7 @@ See [A survey of RDF storage approaches](https://hal.inria.fr/hal-01299496/docum
 
 # Installation
 
-Assuming you already have `python 2.7`, `pip 9`, `java 11`,
+Assuming you already have `python 3`, `pip`, `java 11`,
 
 Download [jena 3.9](https://jena.apache.org/download/index.cgi) and update classpath:
 
@@ -13,7 +13,7 @@ Download [jena 3.9](https://jena.apache.org/download/index.cgi) and update class
 export CLASSPATH=${CLASSPATH}:YOUR-JENA-DIR-PATH/lib/*
 ```
 
-Create a new virtualenv:
+Installation in a virtualenv is strongly recommended
 
 install Cython
 
