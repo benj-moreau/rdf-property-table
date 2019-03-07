@@ -5,7 +5,7 @@ import validators
 
 from utils.sparql_queries import exec_predicates_query, exec_types_query, exec_subject_query, exec_property_table
 from utils.sparql_queries import load_dataset, clean_dataset, get_uri_prefix
-from utils.rml_serializer import get_rml_graph
+from utils.yarrrml_serializer import get_rml
 from utils.sparql_queries import get_uri_suffix, get_id_variable, get_variables
 
 CSV_DELIMITER = '|'
@@ -93,7 +93,7 @@ def main():
             subject_prefix = get_subject_prefix(dataset, typ)
             properties = get_predicates(dataset, typ)
             templates = get_property_table(properties, dataset, typ, subject_prefix, filename)
-            get_rml_graph(properties, typ, subject_prefix, filename, templates)
+            get_rml(properties, typ, subject_prefix, filename, templates)
         clean_dataset()
 
 

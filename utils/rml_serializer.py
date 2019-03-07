@@ -7,7 +7,7 @@ rml = Namespace("http://semweb.mmlab.be/ns/rml#")
 ql = Namespace('http://semweb.mmlab.be/ns/ql#')
 
 
-def get_rml_graph(properties, typ, subject_prefix, filename, templates):
+def get_rml(properties, typ, subject_prefix, filename, templates):
     rdf_mapping = Graph()
     rdf_mapping.bind("ql", ql)
     rdf_mapping.bind("rr", rr)
