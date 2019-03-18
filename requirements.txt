@@ -1,5 +1,4 @@
 rdflib>=4.2.2
 requests>=2.20.0
 pyjnius>=1.2.0
-validators>=0.12.3
 PyYAML>=3.13

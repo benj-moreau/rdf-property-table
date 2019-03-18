@@ -109,7 +109,6 @@ def exec_predicates_query(dataset, typ):
     return _exec_query(PREDICATES_QUERY.format(typ), dataset)
 
 
-@fn_timer
 def exec_property_table(properties, dataset, typ, subject_prefix, filename):
     return _exec_query(_property_table_query(properties, typ, subject_prefix), dataset)
 
@@ -127,4 +126,4 @@ def clean_dataset():
     try:
         shutil.rmtree(STORE_PATH)
     except OSError as e:
-        print ("Info: %s - %s." % (e.filename, "Already cleaned"))
+        print("Info: %s - %s." % (e.filename, "Already cleaned"))

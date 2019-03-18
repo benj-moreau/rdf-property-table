@@ -1,12 +1,12 @@
 import argparse
 import codecs
 import csv
-import validators
 
 from utils.sparql_queries import exec_predicates_query, exec_types_query, exec_subject_query, exec_property_table
 from utils.sparql_queries import load_dataset, clean_dataset, get_uri_prefix
 from utils.yarrrml_serializer import get_rml
 from utils.sparql_queries import get_uri_suffix, get_id_variable, get_variables
+from utils.TimerDecorator import fn_timer
 
 CSV_DELIMITER = '|'
 REPLACE_DELIMITER = ' '
@@ -32,29 +32,30 @@ def get_predicates(dataset, typ):
             predicates.append(predicate)
     return predicates
 
-
+@fn_timer
 def get_property_table(properties, dataset, typ, subject_prefix, filename):
     results = exec_property_table(properties, dataset, typ, subject_prefix, filename)
     filename = 'results/{}_{}.csv'.format(filename, get_uri_suffix(typ))
     templates = {}
+    id_variable = get_id_variable(typ)
+    header = [id_variable.replace('?', '')]
+    variables = get_variables(properties)
+    properties = []
+    for var in variables:
+        prop = var.replace('?', '')
+        properties.append(prop)
+        header.append(prop)
     with codecs.open(filename, "w") as fp:
         writer = csv.writer(fp, delimiter=CSV_DELIMITER)
-        id_variable = get_id_variable(typ)
-        header = [id_variable.replace('?', '')]
-        properties = get_variables(properties)
-        for prop in properties:
-            prop = prop.replace('?', '')
-            header.append(prop)
         writer.writerow(header)
         while results.hasNext():
             next_result = results.next()
             row = [next_result.get(id_variable).toString().replace(CSV_DELIMITER, REPLACE_DELIMITER)]
-            for prop in properties:
-                value = next_result.get(prop)
+            for field, var in zip(properties, variables):
+                value = next_result.get(var)
                 if value:
                     value = value.toString()
-                    field = prop.replace('?', '')
-                    if validators.url(value):
+                    if is_uri(value):
                         if not templates.get(field):
                             templates[field] = get_uri_prefix(value)
                         value = get_uri_suffix(value)
@@ -78,6 +79,12 @@ def get_filename(filepath):
     # remove extension
     filename = filename.rsplit('.', 1)[0]
     return filename
+
+
+def is_uri(value):
+    if 'http' in value and '://' in value:
+        return True
+    return False
 
 
 def main():
