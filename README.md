@@ -5,9 +5,9 @@ See [A survey of RDF storage approaches](https://hal.inria.fr/hal-01299496/docum
 
 # Installation
 
-Assuming you already have `python 3`, `pip`, `java 11`,
+Assuming you already have `python 3`, `pip`, `java jdk (openjdk will do)`,
 
-Download [jena 3.10](https://jena.apache.org/download/index.cgi) and update classpath:
+Download [jena](https://jena.apache.org/download/index.cgi) and update classpath:
 
 ```bash
 export CLASSPATH=${CLASSPATH}:YOUR-JENA-DIR-PATH/lib/*
